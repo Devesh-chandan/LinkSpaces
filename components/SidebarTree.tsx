@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileCode2, Plus, FolderPlus } from "lucide-react";
+import { ChevronRight, ChevronDown, Folder, Plus, Trash2, FolderOpen } from "lucide-react";
 
 interface LinkItem { id: string; title: string; url: string; }
 interface Section { id: string; name: string; links: LinkItem[]; }
@@ -13,14 +13,8 @@ interface SidebarTreeProps {
 }
 
 export const SidebarTree: React.FC<SidebarTreeProps> = ({ sections, setSections, activeSectionId, setActiveSectionId }) => {
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [newSectionName, setNewSectionName] = useState("");
   const [isAddingSection, setIsAddingSection] = useState(false);
-
-  const toggleFolder = (id: string) => {
-    setExpandedFolders((prev) => ({ ...prev, [id]: !prev[id] }));
-    setActiveSectionId(id);
-  };
 
   const handleAddSection = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,65 +23,61 @@ export const SidebarTree: React.FC<SidebarTreeProps> = ({ sections, setSections,
     setSections([...sections, newSection]);
     setNewSectionName("");
     setIsAddingSection(false);
-    setExpandedFolders((prev) => ({ ...prev, [newSection.id]: true }));
     setActiveSectionId(newSection.id);
   };
 
+  const handleDeleteSection = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (window.confirm("Delete this folder?")) {
+      const newSections = sections.filter((s) => s.id !== id);
+      setSections(newSections);
+      if (activeSectionId === id) setActiveSectionId(newSections.length > 0 ? newSections[0].id : "");
+    }
+  };
+
   return (
-    <div className="glass-panel h-full rounded-3xl p-5 flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-sm font-semibold text-slate-300 tracking-wide uppercase">Explorer</h2>
-        <button onClick={() => setIsAddingSection(!isAddingSection)} className="p-1.5 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-colors">
-          <FolderPlus size={16} />
+    <div className="flex flex-col h-full rounded-xl border border-white/5 bg-slate-900/20">
+      <div className="flex items-center justify-between p-4 border-b border-white/5">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Spaces</h2>
+        <button onClick={() => setIsAddingSection(!isAddingSection)} className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-md transition-colors">
+          <Plus size={16} />
         </button>
       </div>
 
-      {isAddingSection && (
-        <form onSubmit={handleAddSection} className="mb-4 flex items-center gap-2">
-          <input
-            autoFocus
-            type="text"
-            placeholder="Folder name..."
-            value={newSectionName}
-            onChange={(e) => setNewSectionName(e.target.value)}
-            className="w-full rounded-lg bg-slate-900/80 border border-slate-700 px-3 py-1.5 text-sm text-slate-200 focus:border-cyan-500 focus:outline-none"
-          />
-        </form>
-      )}
+      <div className="p-3 space-y-1 overflow-y-auto flex-1 custom-scrollbar">
+        {isAddingSection && (
+          <form onSubmit={handleAddSection} className="mb-2">
+            <input
+              autoFocus
+              type="text"
+              placeholder="New folder..."
+              value={newSectionName}
+              onChange={(e) => setNewSectionName(e.target.value)}
+              className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-1.5 text-sm text-slate-200 focus:border-slate-500 focus:outline-none transition-colors"
+            />
+          </form>
+        )}
 
-      <div className="space-y-1 overflow-y-auto flex-1 pr-2 custom-scrollbar">
         {sections.map((section) => {
-          const isExpanded = expandedFolders[section.id];
           const isActive = activeSectionId === section.id;
-
           return (
-            <div key={section.id} className="select-none">
-              <div
-                onClick={() => toggleFolder(section.id)}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
-                  isActive ? "bg-cyan-500/10 text-cyan-400" : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
-                }`}
-              >
-                {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                {isExpanded ? <FolderOpen size={16} className="text-cyan-400" /> : <Folder size={16} />}
-                <span className="text-sm font-medium truncate">{section.name}</span>
+            <div
+              key={section.id}
+              onClick={() => setActiveSectionId(section.id)}
+              className={`group flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors ${
+                isActive ? "bg-slate-800/80 text-slate-100 font-medium" : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 truncate">
+                {isActive ? <FolderOpen size={15} className="text-slate-300" /> : <Folder size={15} className="text-slate-500" />}
+                <span className="text-sm truncate">{section.name}</span>
               </div>
-
-              {/* Folder Contents (Files/Links) */}
-              {isExpanded && (
-                <div className="ml-5 pl-2 border-l border-slate-800 mt-1 space-y-1">
-                  {section.links.length === 0 ? (
-                    <div className="px-2 py-1 text-xs text-slate-600 italic">Empty folder</div>
-                  ) : (
-                    section.links.map((link) => (
-                      <div key={link.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => window.open(link.url, '_blank')}>
-                        <FileCode2 size={14} className="text-slate-500 shrink-0" />
-                        <span className="text-xs truncate">{link.title}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
+              <button 
+                onClick={(e) => handleDeleteSection(e, section.id)}
+                className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 transition-opacity"
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
           );
         })}

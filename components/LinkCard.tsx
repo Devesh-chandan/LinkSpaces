@@ -1,45 +1,47 @@
+"use client";
+
 import React from "react";
-import { ExternalLink, Trash2 } from "lucide-react";
+import { ExternalLink, Trash2, ArrowUpRight } from "lucide-react";
 
-interface LinkItem {
-  id: string;
-  title: string;
-  url: string;
-}
-
-interface LinkCardProps {
-  link: LinkItem;
-  onDelete: (id: string) => void;
-}
+interface LinkItem { id: string; title: string; url: string; }
+interface LinkCardProps { link: LinkItem; onDelete: (id: string) => void; }
 
 export const LinkCard: React.FC<LinkCardProps> = ({ link, onDelete }) => {
   return (
-    <div className="group relative flex items-center justify-between rounded-2xl glass-panel glass-panel-hover p-5 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(6,182,212,0.12)]">
-      <div className="flex flex-col overflow-hidden pr-4 z-10">
-        <span className="truncate font-semibold text-slate-100 tracking-tight">{link.title}</span>
-        <span className="truncate text-xs font-medium text-cyan-400/70 mt-1">{link.url}</span>
+    <div className="group flex items-start justify-between rounded-xl border border-slate-800 bg-slate-900/30 p-4 hover:bg-slate-900/80 hover:border-slate-700 transition-all duration-200">
+      
+      <div className="flex flex-col overflow-hidden pr-4">
+        <a 
+          href={link.url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center gap-1.5 font-medium text-slate-200 hover:text-white transition-colors truncate"
+        >
+          {link.title}
+          <ArrowUpRight size={14} className="text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </a>
+        <span className="truncate text-xs text-slate-500 mt-1">
+          {link.url}
+        </span>
       </div>
       
-      {/* Action Buttons */}
-      <div className="flex items-center gap-1 opacity-0 translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 z-10">
+      {/* Actions */}
+      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <a
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-xl p-2.5 text-slate-400 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
+          className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-md transition-colors"
         >
-          <ExternalLink size={18} strokeWidth={2.5} />
+          <ExternalLink size={16} />
         </a>
         <button
           onClick={() => onDelete(link.id)}
-          className="rounded-xl p-2.5 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
+          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors"
         >
-          <Trash2 size={18} strokeWidth={2.5} />
+          <Trash2 size={16} />
         </button>
       </div>
-
-      {/* Subtle hover gradient background injection */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
     </div>
   );
 };
